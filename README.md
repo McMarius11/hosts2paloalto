@@ -11,6 +11,7 @@ Basis-Variante: Adware + Malware.
 | Datei | Einträge | EDL-Typ | Wofür |
 |---|---:|---|---|
 | [`domains.txt`](https://mcmarius11.github.io/hosts2paloalto/domains.txt) | ~97.600 | Domain **oder** URL | 1:1-Konvertierung, exaktes Host-Matching. **Standard.** |
+| [`domains-no-nc.txt`](https://mcmarius11.github.io/hosts2paloalto/domains-no-nc.txt) | ~79.500 | Domain **oder** URL | Wie oben, ohne die nicht-kommerziell lizenzierten Quellen. Siehe [Lizenz](#lizenz). |
 | [`domains-collapsed.txt`](https://mcmarius11.github.io/hosts2paloalto/domains-collapsed.txt) | ~48.000 | Domain | Auf eTLD+1 zusammengefasst, für knappe EDL-Limits. Subdomain-Matching aktivieren. |
 | [`url-wildcard.txt`](https://mcmarius11.github.io/hosts2paloalto/url-wildcard.txt) | ~48.000 | URL | Wie oben, aber in `*.domain/`-Syntax. |
 | [`stats.json`](https://mcmarius11.github.io/hosts2paloalto/stats.json) | – | – | Aktuelle Zeilenzahlen und Build-Zeitstempel. |
@@ -118,10 +119,36 @@ Das Zusammenfassen auf die registrierbare Domain nutzt die
 ## Lizenz
 
 Die **Konvertierungs-Pipeline** in diesem Repo (`scripts/`, `data/`, Workflow) steht unter
-[MIT](LICENSE). Für die **Filterdaten** gelten die Lizenzen der Quellen, die StevenBlack
-zusammenführt.
+[MIT](LICENSE).
 
-> ⚠️ Darunter sind zwei **nicht-kommerzielle** Lizenzen (MVPS: CC BY-NC-SA 4.0,
-> someonewhocares: non-commercial with attribution). Sie gelten für die Daten unabhängig
-> davon, über wie viele Zwischenschritte man sie bezieht — beim geschäftlichen Einsatz also
-> kurz prüfen.
+Für die **Filterdaten** gelten die Lizenzen der Quellen, die StevenBlack zusammenführt. Wie
+sich die Basis-Variante darauf verteilt (gemessen gegen die Originallisten):
+
+| Anteil | Deckung | Konsequenz |
+|---:|---|---|
+| 21,9 % | mind. eine permissive Quelle (MIT / CC0 / CC BY) | unkritisch |
+| 59,0 % | nur über [KADhosts](https://kadantiscam.netlify.app/) | **CC BY-SA 4.0** — ShareAlike |
+| 18,0 % | nur über MVPS / someonewhocares | **nicht-kommerziell** |
+
+Daraus folgen zwei Dinge:
+
+**Attribution ist Pflicht.** CC BY, BY-SA und BY-NC-SA verlangen Quellenangabe. Deshalb trägt
+jede erzeugte Datei einen Header mit Quelle, Lizenzhinweis und Verweis auf die Quellenliste —
+beim Weitergeben der Dateien nicht entfernen.
+
+**ShareAlike dominiert.** Rund 59 % der Domains sind nur über KADhosts (CC BY-SA 4.0) gedeckt.
+Die erzeugten Listen sind damit als Bearbeitung unter denselben Bedingungen weiterzugeben —
+sie sind *nicht* MIT, auch wenn die Pipeline es ist.
+
+> ⚠️ **Kommerzieller Einsatz:** MVPS (CC BY-NC-SA 4.0) und someonewhocares (non-commercial
+> with attribution) untersagen die kommerzielle Nutzung. Für diesen Fall gibt es
+> **`domains-no-nc.txt`** — dieselbe Liste ohne diese beiden Quellen (~79.500 statt ~97.600
+> Einträge). Der ShareAlike-Punkt oben bleibt davon unberührt.
+>
+> Der Ausschluss läuft über die `# Start`/`# End`-Marker der gemergten Datei. Da StevenBlack
+> beim Mergen dedupliziert, entfernt das rund 600 Domains mehr als nötig — also konservativ
+> in die sichere Richtung.
+
+Dies ist keine Rechtsberatung. Ob Blocklisten überhaupt schutzfähig sind, ist umstritten
+(reine Faktensammlungen genießen dünnen Schutz; in der EU kann das
+Datenbankherstellerrecht greifen). Im Zweifel selbst prüfen lassen.

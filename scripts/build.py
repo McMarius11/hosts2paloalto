@@ -27,6 +27,31 @@ PAGES_URL = "https://mcmarius11.github.io/hosts2paloalto"
 
 SB_REPO = "https://github.com/StevenBlack/hosts"
 
+# Sektionen der gemergten Datei, die unter nicht-kommerziellen Lizenzen stehen.
+# Steven dedupliziert beim Mergen, jede Domain landet in genau einer Sektion -
+# ein Ausschluss ueber die Marker entfernt daher ein paar hundert Domains mehr
+# als noetig (die auch in permissiven Listen stehen). Das ist der Preis dafuer,
+# nicht alle 16 Originallisten einzeln ziehen zu muessen.
+NC_SECTIONS = {"mvps.org", "someonewhocares.org"}
+
+# Attribution ist bei CC BY / BY-SA / BY-NC-SA Pflicht und gehoert damit in
+# jede ausgelieferte Datei, nicht nur in die README.
+ATTRIBUTION = [
+    "",
+    "Quelle der Filterdaten:",
+    f"  StevenBlack/hosts - {SB_REPO}",
+    f"  {HOSTS_URL}",
+    "",
+    "Die Liste fuehrt mehrere kuratierte Quellen mit unterschiedlichen Lizenzen",
+    "zusammen; die vollstaendige Uebersicht steht in Stevens Readme:",
+    f"  {SB_REPO}#sources-of-hosts-data-unified-in-this-variant",
+    "",
+    "Der ueberwiegende Teil der Daten stammt aus KADhosts (CC BY-SA 4.0,",
+    "https://kadantiscam.netlify.app/). Weiterverbreitung dieser Datei erfolgt",
+    "unter denselben Bedingungen. Die Konvertierungs-Pipeline selbst steht",
+    f"unter MIT: {REPO_URL}",
+]
+
 # Hostnamen, die PAN-OS als EDL-Eintrag akzeptiert. Bewusst streng: alles was
 # hier durchfaellt, wuerde die Firewall beim Import ohnehin verwerfen und nur
 # eine Warnung im System-Log erzeugen.
@@ -55,11 +80,27 @@ def read_list(path: Path) -> list[str]:
     return out
 
 
-def parse_hosts(text: str) -> set[str]:
-    """Der Kern: 0.0.0.0-Praefix weg, Hostname behalten."""
+def parse_hosts(text: str) -> tuple[set[str], set[str]]:
+    """Der Kern: 0.0.0.0-Praefix weg, Hostname behalten.
+
+    Liefert (alle Domains, Domains aus nicht-kommerziellen Sektionen). Die
+    gemergte Datei markiert die Herkunft mit "# Start <Quelle>" / "# End".
+    """
     domains: set[str] = set()
-    for line in text.splitlines():
-        line = line.split("#", 1)[0].strip()
+    nc: set[str] = set()
+    section: str | None = None
+
+    for raw in text.splitlines():
+        stripped = raw.strip()
+        start = re.match(r"^#\s*Start\s+(.+?)\s*$", stripped)
+        if start:
+            section = start.group(1)
+            continue
+        if re.match(r"^#\s*End\b", stripped):
+            section = None
+            continue
+
+        line = stripped.split("#", 1)[0].strip()
         if not line:
             continue
         parts = line.split()
@@ -71,7 +112,9 @@ def parse_hosts(text: str) -> set[str]:
             if host in NULL_TARGETS or host == "localhost" or not VALID.match(host):
                 continue
             domains.add(host)
-    return domains
+            if section in NC_SECTIONS:
+                nc.add(host)
+    return domains, nc
 
 
 class PublicSuffixList:
@@ -270,18 +313,24 @@ document.querySelectorAll('.url-row button').forEach(function (b) {{
 
 
 def write(path: Path, header: list[str], entries: list[str]) -> int:
+    """Schreibt eine EDL-Datei.
+
+    PAN-OS ist bei der Formatierung empfindlich: keine Leerzeilen, kein
+    Trailing Whitespace. Leere Header-Zeilen werden daher zu einem nackten
+    "#" statt "# ", und die Eintraege stehen ohne Leerzeile dazwischen.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    body = "\n".join(f"# {h}" for h in header)
-    body += "\n" + "\n".join(entries) + "\n"
-    path.write_text(body, encoding="utf-8")
+    lines = [f"# {h}".rstrip() for h in header]
+    lines += [e.strip() for e in entries if e.strip()]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return len(entries)
 
 
 def main() -> int:
     built = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     print(f"[*] hole {HOSTS_URL}")
-    domains = parse_hosts(fetch(HOSTS_URL))
-    print(f"    {len(domains)} eindeutige Domains")
+    domains, nc_domains = parse_hosts(fetch(HOSTS_URL))
+    print(f"    {len(domains)} eindeutige Domains ({len(nc_domains)} aus NC-Quellen)")
 
     allowlist = set(read_list(DATA / "allowlist.txt"))
     no_collapse = set(read_list(DATA / "no-collapse.txt"))
@@ -289,6 +338,9 @@ def main() -> int:
     kept = sorted(d for d in domains if not is_covered(d, allowlist))
     removed = len(domains) - len(kept)
     print(f"    {removed} durch Allowlist entfernt -> {len(kept)} Eintraege")
+
+    commercial = sorted(d for d in kept if d not in nc_domains)
+    print(f"    ohne NC-Quellen: {len(commercial)} Eintraege")
 
     print(f"[*] hole {PSL_URL}")
     psl = PublicSuffixList(fetch(PSL_URL))
@@ -308,26 +360,34 @@ def main() -> int:
     collapsed_sorted = sorted(collapsed)
     print(f"    eTLD+1: {len(collapsed_sorted)} Eintraege")
 
-    src = f"Quelle: {HOSTS_URL}"
-    common = [f"Erzeugt: {built}", src, "Repo: https://github.com/McMarius11/hosts2paloalto"]
+    def head(*lines: str) -> list[str]:
+        return ["hosts2paloalto", f"Erzeugt: {built}", *lines] + ATTRIBUTION
 
     n_flat = write(
         OUT / "domains.txt",
-        common + [f"Typ: PAN-OS EDL (Domain oder URL) | {len(kept)} Eintraege",
-                  "1:1-Konvertierung der hosts-Datei, exaktes Host-Matching."],
+        head(f"Typ: PAN-OS EDL (Domain oder URL) | {len(kept)} Eintraege",
+             "1:1-Konvertierung der hosts-Datei, exaktes Host-Matching."),
         kept,
     )
     n_coll = write(
         OUT / "domains-collapsed.txt",
-        common + [f"Typ: PAN-OS Domain-EDL | {len(collapsed_sorted)} Eintraege",
-                  "Auf eTLD+1 zusammengefasst. Subdomain-Matching aktivieren!"],
+        head(f"Typ: PAN-OS Domain-EDL | {len(collapsed_sorted)} Eintraege",
+             "Auf eTLD+1 zusammengefasst. Subdomain-Matching aktivieren!"),
         collapsed_sorted,
     )
     n_url = write(
         OUT / "url-wildcard.txt",
-        common + [f"Typ: PAN-OS URL-EDL | {len(collapsed_sorted)} Eintraege",
-                  "Wildcard-Syntax, deckt alle Subdomains ab."],
+        head(f"Typ: PAN-OS URL-EDL | {len(collapsed_sorted)} Eintraege",
+             "Wildcard-Syntax, deckt alle Subdomains ab."),
         [f"*.{d}/" for d in collapsed_sorted],
+    )
+    n_comm = write(
+        OUT / "domains-no-nc.txt",
+        head(f"Typ: PAN-OS EDL (Domain oder URL) | {len(commercial)} Eintraege",
+             "Ohne die Sektionen mvps.org und someonewhocares.org, deren Lizenzen",
+             "die kommerzielle Nutzung ausschliessen. Verbleibende Daten stehen",
+             "weiterhin ueberwiegend unter CC BY-SA 4.0 (ShareAlike)."),
+        commercial,
     )
 
     stats = {
@@ -335,10 +395,12 @@ def main() -> int:
         "source": HOSTS_URL,
         "parsed_domains": len(domains),
         "allowlisted_removed": removed,
+        "non_commercial_excluded": len(kept) - len(commercial),
         "files": {
             "domains.txt": n_flat,
             "domains-collapsed.txt": n_coll,
             "url-wildcard.txt": n_url,
+            "domains-no-nc.txt": n_comm,
         },
     }
     (OUT / "stats.json").write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
@@ -351,11 +413,15 @@ def main() -> int:
              "Auf die registrierbare Domain zusammengefasst - rund halb so gross. Subdomain-Matching aktivieren."),
             ("url-wildcard.txt", n_url, "URL-EDL",
              "Wie oben, aber in Wildcard-Syntax fuer URL-EDLs. Deckt alle Subdomains ab."),
+            ("domains-no-nc.txt", n_comm, "Domain- oder URL-EDL",
+             "Wie domains.txt, aber ohne die Quellen mit nicht-kommerzieller Lizenz. "
+             "Fuer den Einsatz im geschaeftlichen Umfeld."),
         ]),
         encoding="utf-8",
     )
 
     print(f"[+] index.html")
+    print(f"[+] domains-no-nc.txt      {n_comm}")
     print(f"[+] domains.txt            {n_flat}")
     print(f"[+] domains-collapsed.txt  {n_coll}")
     print(f"[+] url-wildcard.txt       {n_url}")
