@@ -1,0 +1,108 @@
+name: Build EDLs
+
+on:
+  schedule:
+    # Stuendlich pruefen, ob StevenBlack die Liste aktualisiert hat.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Bauen, auch wenn upstream unveraendert ist"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "data/**"
+      - ".github/workflows/build.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # GitHub kann uns nicht benachrichtigen, wenn ein fremdes Repo sich
+      # aendert. Also fragen wir den letzten Commit der hosts-Datei ab und
+      # nutzen ihn als Cache-Key: unveraendert -> Cache-Hit -> Build ueberspringen.
+      - name: Upstream-Commit ermitteln
+        id: upstream
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh api \
+            '/repos/StevenBlack/hosts/commits?path=hosts&per_page=1' \
+            --jq '.[0].sha')
+          if [ -z "$sha" ] || [ "$sha" = "null" ]; then
+            echo "Konnte Upstream-SHA nicht ermitteln - baue sicherheitshalber."
+            sha="unknown-$(date +%s)"
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Upstream hosts commit: $sha"
+
+      - name: Bereits gebauten Stand pruefen
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: .build-marker
+          key: edl-${{ steps.upstream.outputs.sha }}-${{ hashFiles('scripts/build.py', 'data/*.txt') }}
+
+      - name: Build
+        id: run
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force
+        run: |
+          python3 scripts/build.py
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .build-marker
+          echo "built=true" >> "$GITHUB_OUTPUT"
+
+      - name: Ergebnis zusammenfassen
+        if: steps.run.outputs.built == 'true'
+        run: |
+          {
+            echo "### EDLs neu gebaut"
+            echo ""
+            echo "Upstream-Commit: \`${{ steps.upstream.outputs.sha }}\`"
+            echo ""
+            echo '| Datei | Eintraege |'
+            echo '|---|---:|'
+            for f in public/*.txt; do
+              printf '| `%s` | %s |\n' "$(basename "$f")" "$(grep -cv '^#' "$f")"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Skip melden
+        if: steps.run.outputs.built != 'true'
+        run: echo "Upstream unveraendert (${{ steps.upstream.outputs.sha }}) - nichts zu tun." >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/configure-pages@v5
+        if: steps.run.outputs.built == 'true'
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.run.outputs.built == 'true'
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    if: needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true

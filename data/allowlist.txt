@@ -1,0 +1,16 @@
+# Eigene Ausnahmen - diese Domains landen in KEINER erzeugten EDL.
+#
+# Ein Eintrag deckt die Domain selbst und alle Subdomains ab:
+#   example.com     ->  entfernt example.com, www.example.com, a.b.example.com
+#
+# Nach dem Bearbeiten: committen und pushen. Der Push triggert den Build,
+# die neuen Dateien liegen ein bis zwei Minuten spaeter auf GitHub Pages.
+# Danach auf der Firewall entweder den Refresh abwarten oder erzwingen:
+#   request system external-list refresh name <EDL-Name>
+#
+# Typische Kandidaten, wenn etwas faelschlich blockiert wird - erst pruefen,
+# ob es wirklich noetig ist, dann hier eintragen.
+
+# Beispiele (auskommentiert):
+# clients4.google.com
+# app-measurement.com

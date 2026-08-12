@@ -1,0 +1,69 @@
+# Shared Infrastructure - hier NICHT auf eTLD+1 zusammenfassen.
+#
+# Diese Suffixe hosten tausende unabhaengige Kunden. Wuerde man
+# "irgendwas.amazonaws.com" zu "amazonaws.com" zusammenfassen und mit
+# Subdomain-Matching blocken, waere ganz AWS gesperrt. Unter diesen
+# Suffixen bleiben die Originaldomains aus der hosts-Datei einzeln stehen.
+#
+# Betrifft nur domains-collapsed.txt und url-wildcard.txt.
+# domains.txt (die 1:1-Konvertierung) ist davon nicht beruehrt.
+
+# Cloud / CDN
+amazonaws.com
+cloudfront.net
+edgekey.net
+edgesuite.net
+akamai.net
+akamaiedge.net
+akamaized.net
+azureedge.net
+azurewebsites.net
+windows.net
+cloudapp.net
+appspot.com
+googleusercontent.com
+googleapis.com
+gstatic.com
+fastly.net
+fastlylb.net
+llnwd.net
+cdn77.org
+stackpathdns.com
+
+# Hosting / Platform-as-a-Service
+herokuapp.com
+herokudns.com
+netlify.app
+vercel.app
+pages.dev
+workers.dev
+github.io
+gitlab.io
+firebaseapp.com
+web.app
+repl.co
+glitch.me
+surge.sh
+onrender.com
+
+# Dynamic DNS - fast immer gemischt legitim/boesartig
+ddns.name
+ddns.net
+duckdns.org
+no-ip.com
+no-ip.org
+dyndns.org
+hopto.org
+zapto.org
+sytes.net
+serveo.net
+ngrok.io
+ngrok-free.app
+
+# Blog- / User-Content-Plattformen
+blogspot.com
+wordpress.com
+tumblr.com
+weebly.com
+wixsite.com
+myshopify.com

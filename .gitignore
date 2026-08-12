@@ -1,0 +1,9 @@
+# Erzeugte EDLs - werden vom Actions-Workflow gebaut und direkt nach
+# GitHub Pages deployed, nicht ins Repo committet. Das haelt die History
+# schlank (domains.txt allein ist 2 MB und aendert sich taeglich).
+public/
+.build-marker
+__pycache__/
+
+# lokale Tool-Konfiguration
+.claude/settings.local.json
