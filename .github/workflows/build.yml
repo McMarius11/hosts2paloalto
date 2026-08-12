@@ -29,6 +29,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      built: ${{ steps.run.outputs.built }}
     steps:
       - uses: actions/checkout@v4
 
@@ -94,7 +96,9 @@ jobs:
 
   deploy:
     needs: build
-    if: needs.build.result == 'success'
+    # Nur deployen, wenn tatsaechlich gebaut wurde - sonst gibt es kein
+    # Artefakt und der Job wuerde ins Leere laufen.
+    if: needs.build.outputs.built == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -105,4 +109,3 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
-        continue-on-error: true
