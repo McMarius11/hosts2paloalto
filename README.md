@@ -30,6 +30,7 @@ nur, wenn die EDL in einer Policy referenziert wird.
 
 - Reicht das URL- bzw. Domain-Limit für ~97.600 Einträge → **`domains.txt`**.
 - Reicht es nicht → **`domains-collapsed.txt`** bzw. **`url-wildcard.txt`** (~48.000).
+- Geschäftlicher Einsatz → **`domains-no-nc.txt`** (~79.500), siehe [Lizenz](#lizenz).
 
 ⚠️ Bei einer **Domain-EDL mit aktiviertem Subdomain-Matching** zählt laut Palo-Doku
 jeder Eintrag **doppelt** („each domain in a given list requires an additional entry").
@@ -126,15 +127,21 @@ sich die Basis-Variante darauf verteilt (gemessen gegen die Originallisten):
 
 | Anteil | Deckung | Konsequenz |
 |---:|---|---|
-| 21,9 % | mind. eine permissive Quelle (MIT / CC0 / CC BY) | unkritisch |
+| 21,9 % | mind. eine permissive Quelle (MIT / CC0 / CC BY) | frei nutzbar, CC-BY-Anteile brauchen Attribution |
 | 59,0 % | nur über [KADhosts](https://kadantiscam.netlify.app/) | **CC BY-SA 4.0** — ShareAlike |
 | 18,0 % | nur über MVPS / someonewhocares | **nicht-kommerziell** |
 
 Daraus folgen zwei Dinge:
 
-**Attribution ist Pflicht.** CC BY, BY-SA und BY-NC-SA verlangen Quellenangabe. Deshalb trägt
-jede erzeugte Datei einen Header mit Quelle, Lizenzhinweis und Verweis auf die Quellenliste —
-beim Weitergeben der Dateien nicht entfernen.
+**Attribution ist Pflicht.** Fünf der zusammengeführten Quellen verlangen laut Lizenz eine
+Namensnennung — [AdAway](https://adaway.org/) (CC BY 3.0),
+[KADhosts](https://kadantiscam.netlify.app/) (CC BY-SA 4.0),
+[Tiuxo](https://github.com/tiuxo/hosts) (CC BY 4.0),
+[MVPS](https://winhelp2002.mvps.org/) (CC BY-NC-SA 4.0) und
+[Dan Pollock / someonewhocares](https://someonewhocares.org/hosts/). Sie stehen namentlich im
+Header **jeder** erzeugten Datei; beim Weitergeben nicht entfernen. In `domains-no-nc.txt`
+fehlen MVPS und someonewhocares dort bewusst — deren Daten sind in dieser Variante nicht
+enthalten.
 
 **ShareAlike dominiert.** Rund 59 % der Domains sind nur über KADhosts (CC BY-SA 4.0) gedeckt.
 Die erzeugten Listen sind damit als Bearbeitung unter denselben Bedingungen weiterzugeben —

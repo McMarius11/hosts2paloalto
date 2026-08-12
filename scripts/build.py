@@ -34,23 +34,51 @@ SB_REPO = "https://github.com/StevenBlack/hosts"
 # nicht alle 16 Originallisten einzeln ziehen zu muessen.
 NC_SECTIONS = {"mvps.org", "someonewhocares.org"}
 
-# Attribution ist bei CC BY / BY-SA / BY-NC-SA Pflicht und gehoert damit in
-# jede ausgelieferte Datei, nicht nur in die README.
-ATTRIBUTION = [
-    "",
-    "Quelle der Filterdaten:",
-    f"  StevenBlack/hosts - {SB_REPO}",
-    f"  {HOSTS_URL}",
-    "",
-    "Die Liste fuehrt mehrere kuratierte Quellen mit unterschiedlichen Lizenzen",
-    "zusammen; die vollstaendige Uebersicht steht in Stevens Readme:",
-    f"  {SB_REPO}#sources-of-hosts-data-unified-in-this-variant",
-    "",
-    "Der ueberwiegende Teil der Daten stammt aus KADhosts (CC BY-SA 4.0,",
-    "https://kadantiscam.netlify.app/). Weiterverbreitung dieser Datei erfolgt",
-    "unter denselben Bedingungen. Die Konvertierungs-Pipeline selbst steht",
-    f"unter MIT: {REPO_URL}",
+# Quellen, deren Lizenz eine Namensnennung verlangt. MIT- und CC0-Listen
+# stehen bewusst nicht hier - die verlangen keine Attribution in dieser Form.
+# (name, url, lizenz, nur_in_nc_variante_weglassen)
+ATTRIB_SOURCES = [
+    ("AdAway", "https://adaway.org/", "CC BY 3.0", False),
+    ("KADhosts", "https://kadantiscam.netlify.app/", "CC BY-SA 4.0", False),
+    ("Tiuxo hostlist", "https://github.com/tiuxo/hosts", "CC BY 4.0", False),
+    ("MVPS hosts file", "https://winhelp2002.mvps.org/", "CC BY-NC-SA 4.0", True),
+    ("Dan Pollock - someonewhocares", "https://someonewhocares.org/hosts/",
+     "non-commercial with attribution", True),
 ]
+
+
+def attribution(include_nc: bool) -> list[str]:
+    """Attribution ist bei CC BY / BY-SA / BY-NC-SA Pflicht und gehoert damit in
+    jede ausgelieferte Datei, nicht nur in die README.
+
+    In der NC-freien Variante werden die beiden nicht-kommerziellen Quellen
+    weggelassen - deren Daten sind dort nicht enthalten, also waere die
+    Nennung schlicht falsch.
+    """
+    lines = [
+        "",
+        "Quelle der Filterdaten:",
+        f"  StevenBlack/hosts - {SB_REPO}",
+        f"  {HOSTS_URL}",
+        "",
+        "Die Liste fuehrt mehrere kuratierte Quellen zusammen. Diese verlangen",
+        "laut ihrer Lizenz eine Namensnennung:",
+    ]
+    for name, url, lic, is_nc in ATTRIB_SOURCES:
+        if is_nc and not include_nc:
+            continue
+        lines.append(f"  {name} ({lic})")
+        lines.append(f"    {url}")
+    lines += [
+        "",
+        "Vollstaendige Quellenuebersicht mit allen Lizenzen:",
+        f"  {SB_REPO}#sources-of-hosts-data-unified-in-this-variant",
+        "",
+        "Der ueberwiegende Teil der Daten stammt aus KADhosts (CC BY-SA 4.0).",
+        "Weiterverbreitung dieser Datei erfolgt unter denselben Bedingungen.",
+        f"Die Konvertierungs-Pipeline selbst steht unter MIT: {REPO_URL}",
+    ]
+    return lines
 
 # Hostnamen, die PAN-OS als EDL-Eintrag akzeptiert. Bewusst streng: alles was
 # hier durchfaellt, wuerde die Firewall beim Import ohnehin verwerfen und nur
@@ -173,6 +201,10 @@ def render_index(built: str, files: list[tuple[str, int, str, str]]) -> str:
       </article>"""
         for i, (name, count, edl_type, desc) in enumerate(files)
     )
+    attrib_inline = ", ".join(
+        f'<a href="{url}" rel="noopener">{name}</a> ({lic})'
+        for name, url, lic, _ in ATTRIB_SOURCES
+    )
     return f"""<!doctype html>
 <html lang="de">
 <head>
@@ -280,8 +312,10 @@ show system external-list name &lt;EDL-Name&gt;</code></pre>
   <pre><code>{HOSTS_URL}</code></pre>
   <p>Welche kuratierten Listen dort zusammenlaufen, ist
   <a href="{SB_REPO}#sources-of-hosts-data-unified-in-this-variant" rel="noopener">in Stevens
-  Readme</a> samt Lizenzen dokumentiert. Das Zusammenfassen auf die registrierbare Domain nutzt
-  die <a href="https://publicsuffix.org/" rel="noopener">Public Suffix List</a> (Mozilla, MPL 2.0).</p>
+  Readme</a> samt Lizenzen dokumentiert. Fuenf davon verlangen laut Lizenz eine Namensnennung
+  und stehen deshalb im Header jeder erzeugten Datei:
+  {attrib_inline}. Das Zusammenfassen auf die registrierbare Domain nutzt die
+  <a href="https://publicsuffix.org/" rel="noopener">Public Suffix List</a> (Mozilla, MPL 2.0).</p>
   <div class="note">
     Unter den zusammengefuehrten Quellen sind zwei <b>nicht-kommerzielle</b> Lizenzen
     (MVPS: CC BY-NC-SA 4.0, someonewhocares: non-commercial with attribution). Die gelten fuer
@@ -360,8 +394,8 @@ def main() -> int:
     collapsed_sorted = sorted(collapsed)
     print(f"    eTLD+1: {len(collapsed_sorted)} Eintraege")
 
-    def head(*lines: str) -> list[str]:
-        return ["hosts2paloalto", f"Erzeugt: {built}", *lines] + ATTRIBUTION
+    def head(*lines: str, include_nc: bool = True) -> list[str]:
+        return ["hosts2paloalto", f"Erzeugt: {built}", *lines] + attribution(include_nc)
 
     n_flat = write(
         OUT / "domains.txt",
@@ -386,7 +420,8 @@ def main() -> int:
         head(f"Typ: PAN-OS EDL (Domain oder URL) | {len(commercial)} Eintraege",
              "Ohne die Sektionen mvps.org und someonewhocares.org, deren Lizenzen",
              "die kommerzielle Nutzung ausschliessen. Verbleibende Daten stehen",
-             "weiterhin ueberwiegend unter CC BY-SA 4.0 (ShareAlike)."),
+             "weiterhin ueberwiegend unter CC BY-SA 4.0 (ShareAlike).",
+             include_nc=False),
         commercial,
     )
 
