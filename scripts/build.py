@@ -34,13 +34,19 @@ SB_REPO = "https://github.com/StevenBlack/hosts"
 # nicht alle 16 Originallisten einzeln ziehen zu muessen.
 NC_SECTIONS = {"mvps.org", "someonewhocares.org"}
 
-# Quellen, deren Lizenz eine Namensnennung verlangt. MIT- und CC0-Listen
-# stehen bewusst nicht hier - die verlangen keine Attribution in dieser Form.
-# (name, url, lizenz, nur_in_nc_variante_weglassen)
+# Quellen, deren Lizenz eine Namensnennung bzw. das Erhalten des
+# Copyright-Vermerks verlangt: alle CC-BY-Varianten und MIT. Reine
+# CC0-Listen (minecraft-hosts, URLHaus) stehen bewusst nicht hier - CC0
+# verzichtet ausdruecklich auf Attribution.
+# (name, url, lizenz, entfaellt_in_nc_freier_variante)
 ATTRIB_SOURCES = [
     ("AdAway", "https://adaway.org/", "CC BY 3.0", False),
     ("KADhosts", "https://kadantiscam.netlify.app/", "CC BY-SA 4.0", False),
     ("Tiuxo hostlist", "https://github.com/tiuxo/hosts", "CC BY 4.0", False),
+    ("FadeMind - hosts.extras", "https://github.com/FadeMind/hosts.extras", "MIT", False),
+    ("Mitchell Krog - Badd Boyz Hosts",
+     "https://github.com/mitchellkrogza/Badd-Boyz-Hosts", "MIT", False),
+    ("bigdargon - hostsVN", "https://github.com/bigdargon/hostsVN", "MIT", False),
     ("MVPS hosts file", "https://winhelp2002.mvps.org/", "CC BY-NC-SA 4.0", True),
     ("Dan Pollock - someonewhocares", "https://someonewhocares.org/hosts/",
      "non-commercial with attribution", True),
@@ -62,7 +68,8 @@ def attribution(include_nc: bool) -> list[str]:
         f"  {HOSTS_URL}",
         "",
         "Die Liste fuehrt mehrere kuratierte Quellen zusammen. Diese verlangen",
-        "laut ihrer Lizenz eine Namensnennung:",
+        "laut ihrer Lizenz eine Namensnennung bzw. das Erhalten des",
+        "Copyright-Vermerks:",
     ]
     for name, url, lic, is_nc in ATTRIB_SOURCES:
         if is_nc and not include_nc:

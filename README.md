@@ -133,15 +133,29 @@ sich die Basis-Variante darauf verteilt (gemessen gegen die Originallisten):
 
 Daraus folgen zwei Dinge:
 
-**Attribution ist Pflicht.** Fünf der zusammengeführten Quellen verlangen laut Lizenz eine
-Namensnennung — [AdAway](https://adaway.org/) (CC BY 3.0),
-[KADhosts](https://kadantiscam.netlify.app/) (CC BY-SA 4.0),
-[Tiuxo](https://github.com/tiuxo/hosts) (CC BY 4.0),
-[MVPS](https://winhelp2002.mvps.org/) (CC BY-NC-SA 4.0) und
-[Dan Pollock / someonewhocares](https://someonewhocares.org/hosts/). Sie stehen namentlich im
-Header **jeder** erzeugten Datei; beim Weitergeben nicht entfernen. In `domains-no-nc.txt`
-fehlen MVPS und someonewhocares dort bewusst — deren Daten sind in dieser Variante nicht
-enthalten.
+**Attribution ist Pflicht.** Acht der zusammengeführten Quellen verlangen laut Lizenz eine
+Namensnennung (CC BY / BY-SA / BY-NC-SA) bzw. das Erhalten des Copyright-Vermerks (MIT):
+
+| Quelle | Lizenz |
+|---|---|
+| [AdAway](https://adaway.org/) | CC BY 3.0 |
+| [KADhosts](https://kadantiscam.netlify.app/) | CC BY-SA 4.0 |
+| [Tiuxo](https://github.com/tiuxo/hosts) | CC BY 4.0 |
+| [FadeMind – hosts.extras](https://github.com/FadeMind/hosts.extras) | MIT |
+| [Mitchell Krog – Badd Boyz Hosts](https://github.com/mitchellkrogza/Badd-Boyz-Hosts) | MIT |
+| [bigdargon – hostsVN](https://github.com/bigdargon/hostsVN) | MIT |
+| [MVPS](https://winhelp2002.mvps.org/) | CC BY-NC-SA 4.0 |
+| [Dan Pollock – someonewhocares](https://someonewhocares.org/hosts/) | non-commercial with attribution |
+
+Alle stehen namentlich im Header **jeder** erzeugten Datei; beim Weitergeben nicht entfernen.
+In `domains-no-nc.txt` fehlen MVPS und someonewhocares dort bewusst — deren Daten sind in
+dieser Variante nicht enthalten. [minecraft-hosts](https://github.com/jamiemansfield/minecraft-hosts)
+und [URLHaus](https://urlhaus.abuse.ch/) stehen unter CC0 und verzichten ausdrücklich auf
+Attribution.
+
+> ℹ️ Für [yoyo.org](https://pgl.yoyo.org/adservers/) nennt StevenBlacks Quellenübersicht
+> **keine Lizenz**. Diese Domains lassen sich lizenzrechtlich daher nicht sauber einordnen —
+> ein Restrisiko, das sich mit den vorliegenden Angaben nicht auflösen lässt.
 
 **ShareAlike dominiert.** Rund 59 % der Domains sind nur über KADhosts (CC BY-SA 4.0) gedeckt.
 Die erzeugten Listen sind damit als Bearbeitung unter denselben Bedingungen weiterzugeben —
