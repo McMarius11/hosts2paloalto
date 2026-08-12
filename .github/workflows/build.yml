@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .build-marker
-          key: edl-${{ steps.upstream.outputs.sha }}-${{ hashFiles('scripts/build.py', 'data/*.txt') }}
+          key: edl-${{ steps.upstream.outputs.sha }}-${{ hashFiles('scripts/build.py', 'data/*.txt', '.github/workflows/build.yml') }}
 
       - name: Build
         id: run
