@@ -97,8 +97,31 @@ python3 scripts/build.py    # Ergebnis landet in public/
 
 Keine Abhängigkeiten außer Python 3.9+.
 
+## Quellen & Credits
+
+Dieses Projekt filtert **nichts selbst** — es konvertiert nur ein Format ins andere. Die
+eigentliche Arbeit steckt in [**StevenBlack/hosts**](https://github.com/StevenBlack/hosts)
+von [Steven Black](https://github.com/StevenBlack). Verarbeitet wird ausschließlich die
+Basis-Variante:
+
+```
+https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+```
+
+Die Liste ihrerseits führt mehrere kuratierte Quellen zusammen — die sind
+[in Stevens Readme](https://github.com/StevenBlack/hosts#sources-of-hosts-data-unified-in-this-variant)
+samt Lizenzen dokumentiert.
+
+Das Zusammenfassen auf die registrierbare Domain nutzt die
+[Public Suffix List](https://publicsuffix.org/) (Mozilla, MPL 2.0).
+
 ## Lizenz
 
-Die Filterdaten stammen von [StevenBlack/hosts](https://github.com/StevenBlack/hosts)
-(MIT) und den dort eingebundenen Quellen. Dieses Repo enthält nur die
-Konvertierungs-Pipeline, ebenfalls MIT.
+Die **Konvertierungs-Pipeline** in diesem Repo (`scripts/`, `data/`, Workflow) steht unter
+[MIT](LICENSE). Für die **Filterdaten** gelten die Lizenzen der Quellen, die StevenBlack
+zusammenführt.
+
+> ⚠️ Darunter sind zwei **nicht-kommerzielle** Lizenzen (MVPS: CC BY-NC-SA 4.0,
+> someonewhocares: non-commercial with attribution). Sie gelten für die Daten unabhängig
+> davon, über wie viele Zwischenschritte man sie bezieht — beim geschäftlichen Einsatz also
+> kurz prüfen.

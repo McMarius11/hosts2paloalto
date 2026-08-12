@@ -22,6 +22,11 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 OUT = ROOT / "public"
 
+REPO_URL = "https://github.com/McMarius11/hosts2paloalto"
+PAGES_URL = "https://mcmarius11.github.io/hosts2paloalto"
+
+SB_REPO = "https://github.com/StevenBlack/hosts"
+
 # Hostnamen, die PAN-OS als EDL-Eintrag akzeptiert. Bewusst streng: alles was
 # hier durchfaellt, wuerde die Firewall beim Import ohnehin verwerfen und nur
 # eine Warnung im System-Log erzeugen.
@@ -108,6 +113,162 @@ def is_covered(domain: str, suffixes: set[str]) -> bool:
     return False
 
 
+def render_index(built: str, files: list[tuple[str, int, str, str]]) -> str:
+    """Landing Page fuer GitHub Pages. Ohne die waere der Pages-Root ein 404."""
+    cards = "\n".join(
+        f"""      <article class="card">
+        <div class="card-top">
+          <h3>{name}</h3>
+          <span class="count">{format(count, ",d").replace(",", ".")}</span>
+        </div>
+        <p class="type">{edl_type}</p>
+        <p class="desc">{desc}</p>
+        <div class="url-row">
+          <code id="u{i}">{PAGES_URL}/{name}</code>
+          <button type="button" data-target="u{i}" aria-label="URL kopieren">kopieren</button>
+        </div>
+      </article>"""
+        for i, (name, count, edl_type, desc) in enumerate(files)
+    )
+    return f"""<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hosts2paloalto - StevenBlack-Blocklisten als PAN-OS EDL</title>
+<meta name="description" content="Die StevenBlack-hosts-Liste als External Dynamic List fuer Palo Alto PAN-OS. Stuendlich aktualisiert.">
+<style>
+  :root {{
+    --bg:#fbfbfa; --fg:#1a1a18; --muted:#6b6b66; --line:#e2e2dd;
+    --card:#fff; --accent:#c2410c; --code:#f4f4f1;
+  }}
+  @media (prefers-color-scheme:dark) {{
+    :root {{
+      --bg:#16161a; --fg:#e8e8e3; --muted:#9a9a94; --line:#2c2c32;
+      --card:#1d1d22; --accent:#fb923c; --code:#232329;
+    }}
+  }}
+  * {{ box-sizing:border-box; }}
+  body {{
+    margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
+  }}
+  .wrap {{ max-width:860px; margin:0 auto; padding:3rem 1.25rem 5rem; }}
+  header {{ border-bottom:1px solid var(--line); padding-bottom:1.75rem; margin-bottom:2.5rem; }}
+  h1 {{ margin:0 0 .4rem; font-size:1.9rem; letter-spacing:-.02em; }}
+  h1 span {{ color:var(--accent); }}
+  .sub {{ margin:0; color:var(--muted); }}
+  .built {{ margin:1rem 0 0; font-size:.85rem; color:var(--muted); }}
+  .built b {{ color:var(--fg); font-weight:600; }}
+  h2 {{ font-size:1.15rem; margin:2.75rem 0 1rem; letter-spacing:-.01em; }}
+  .card {{
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:1.1rem 1.2rem; margin-bottom:.9rem;
+  }}
+  .card-top {{ display:flex; justify-content:space-between; align-items:baseline; gap:1rem; }}
+  .card h3 {{ margin:0; font-size:1rem; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }}
+  .count {{ font-variant-numeric:tabular-nums; font-weight:600; color:var(--accent); white-space:nowrap; }}
+  .type {{ margin:.35rem 0 0; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }}
+  .desc {{ margin:.5rem 0 .9rem; font-size:.92rem; color:var(--muted); }}
+  .url-row {{ display:flex; gap:.5rem; align-items:stretch; }}
+  .url-row code {{
+    flex:1; background:var(--code); border-radius:6px; padding:.5rem .65rem;
+    font-size:.82rem; overflow-x:auto; white-space:nowrap; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }}
+  .url-row button {{
+    border:1px solid var(--line); background:var(--card); color:var(--fg);
+    border-radius:6px; padding:.5rem .8rem; cursor:pointer; font-size:.82rem; white-space:nowrap;
+  }}
+  .url-row button:hover {{ border-color:var(--accent); color:var(--accent); }}
+  pre {{
+    background:var(--code); border-radius:8px; padding:.9rem 1rem;
+    overflow-x:auto; font-size:.85rem; margin:.75rem 0;
+  }}
+  code {{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }}
+  p code, li code {{ background:var(--code); padding:.1rem .35rem; border-radius:4px; font-size:.88em; }}
+  table {{ border-collapse:collapse; width:100%; font-size:.9rem; }}
+  th,td {{ text-align:left; padding:.45rem .6rem; border-bottom:1px solid var(--line); }}
+  th {{ font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }}
+  a {{ color:var(--accent); }}
+  .note {{
+    border-left:3px solid var(--accent); background:var(--card);
+    padding:.85rem 1rem; border-radius:0 8px 8px 0; font-size:.92rem; margin:1rem 0;
+  }}
+  .scroll {{ overflow-x:auto; }}
+  footer {{ margin-top:3.5rem; padding-top:1.5rem; border-top:1px solid var(--line); font-size:.85rem; color:var(--muted); }}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>hosts2<span>paloalto</span></h1>
+    <p class="sub">Die StevenBlack-Blocklisten als External Dynamic List fuer Palo Alto PAN-OS.</p>
+    <p class="built">Zuletzt gebaut: <b>{built}</b> &middot; stuendlich geprueft, neu gebaut nur bei Aenderung upstream</p>
+  </header>
+
+  <h2>Listen</h2>
+{cards}
+
+  <h2>Welche nehmen?</h2>
+  <p>Zuerst das echte Limit deiner Firewall ermitteln - das ist die einzige verbindliche Quelle:</p>
+  <pre><code>show system state | match max-edl</code></pre>
+  <p>Reicht das Limit fuer die volle Liste, nimm <code>domains.txt</code>. Sonst eine der
+  zusammengefassten Varianten.</p>
+  <div class="note">
+    <b>Wichtig:</b> Die EDL-Limits gelten <b>pro System ueber alle Listen hinweg</b>, nicht pro Liste.
+    Aufsplitten bringt keine zusaetzliche Kapazitaet. Eintraege zaehlen nur, wenn die EDL in einer
+    Policy referenziert wird. Bei einer <b>Domain-EDL mit Subdomain-Matching</b> zaehlt jeder
+    Eintrag doppelt.
+  </div>
+
+  <h2>Einrichtung</h2>
+  <p><code>Objects &gt; External Dynamic Lists &gt; Add</code> - Type auf <code>URL List</code>
+  bzw. <code>Domain List</code>, eine URL von oben als Source, Check for updates auf
+  <code>Hourly</code>. Mit <em>Test Source URL</em> pruefen, dann committen.</p>
+  <pre><code>request system external-list refresh name &lt;EDL-Name&gt;
+show system external-list name &lt;EDL-Name&gt;</code></pre>
+  <p>Details und die Durchsetzung per URL-Filtering-Profil bzw. Anti-Spyware-DNS-Sinkhole
+  stehen in der <a href="{REPO_URL}#einrichtung-in-pan-os" rel="noopener">README</a>.</p>
+
+  <h2>Quellen</h2>
+  <p>Dieses Projekt filtert nichts selbst - es konvertiert nur. Die eigentliche Arbeit steckt in
+  <a href="{SB_REPO}" rel="noopener">StevenBlack/hosts</a>. Verarbeitet wird ausschliesslich
+  die Basis-Variante:</p>
+  <pre><code>{HOSTS_URL}</code></pre>
+  <p>Welche kuratierten Listen dort zusammenlaufen, ist
+  <a href="{SB_REPO}#sources-of-hosts-data-unified-in-this-variant" rel="noopener">in Stevens
+  Readme</a> samt Lizenzen dokumentiert. Das Zusammenfassen auf die registrierbare Domain nutzt
+  die <a href="https://publicsuffix.org/" rel="noopener">Public Suffix List</a> (Mozilla, MPL 2.0).</p>
+  <div class="note">
+    Unter den zusammengefuehrten Quellen sind zwei <b>nicht-kommerzielle</b> Lizenzen
+    (MVPS: CC BY-NC-SA 4.0, someonewhocares: non-commercial with attribution). Die gelten fuer
+    die Daten unabhaengig davon, ueber wie viele Zwischenschritte man sie bezieht - beim
+    geschaeftlichen Einsatz also kurz pruefen.
+  </div>
+
+  <footer>
+    Konvertierungs-Pipeline: MIT &middot;
+    <a href="{REPO_URL}" rel="noopener">Quellcode auf GitHub</a> &middot;
+    <a href="{PAGES_URL}/stats.json">stats.json</a>
+  </footer>
+</div>
+<script>
+document.querySelectorAll('.url-row button').forEach(function (b) {{
+  b.addEventListener('click', function () {{
+    var el = document.getElementById(b.dataset.target);
+    navigator.clipboard.writeText(el.textContent).then(function () {{
+      var old = b.textContent;
+      b.textContent = 'kopiert';
+      setTimeout(function () {{ b.textContent = old; }}, 1200);
+    }});
+  }});
+}});
+</script>
+</body>
+</html>
+"""
+
+
 def write(path: Path, header: list[str], entries: list[str]) -> int:
     path.parent.mkdir(parents=True, exist_ok=True)
     body = "\n".join(f"# {h}" for h in header)
@@ -182,6 +343,19 @@ def main() -> int:
     }
     (OUT / "stats.json").write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
 
+    (OUT / "index.html").write_text(
+        render_index(built, [
+            ("domains.txt", n_flat, "Domain- oder URL-EDL",
+             "1:1-Konvertierung der hosts-Datei. Exaktes Host-Matching, keine Wildcards. Der Standardfall."),
+            ("domains-collapsed.txt", n_coll, "Domain-EDL",
+             "Auf die registrierbare Domain zusammengefasst - rund halb so gross. Subdomain-Matching aktivieren."),
+            ("url-wildcard.txt", n_url, "URL-EDL",
+             "Wie oben, aber in Wildcard-Syntax fuer URL-EDLs. Deckt alle Subdomains ab."),
+        ]),
+        encoding="utf-8",
+    )
+
+    print(f"[+] index.html")
     print(f"[+] domains.txt            {n_flat}")
     print(f"[+] domains-collapsed.txt  {n_coll}")
     print(f"[+] url-wildcard.txt       {n_url}")
